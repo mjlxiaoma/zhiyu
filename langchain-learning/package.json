@@ -13,6 +13,7 @@
   "dependencies": {
     "@langchain/core": "^1.0.1",
     "@langchain/deepseek": "^1.0.0",
+    "@langchain/tavily": "^1.0.0",
     "aod": "^1.0.6",
     "dotenv": "^17.2.3",
     "langchain": "^1.0.1",
