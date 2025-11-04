@@ -166,12 +166,6 @@ const result3 = await app.invoke({
   messages: [{ role: 'user', content: '把这个结果除以 4' }],
 }, config)
 
-console.log('用户:', '把这个结果除以 4')
-console.log('AI:', result3.messages[result3.messages.length - 1].content)
-console.log('总 LLM 调用次数:', result3.llmCalls)
-
-console.log('\n\n📊 ===== 完整对话历史 =====')
-console.log('总消息数:', result3.messages.length)
 result3.messages.forEach((msg, index) => {
   console.log(`\n[${index + 1}] ${msg._getType()}:`)
   if (msg.content) {
