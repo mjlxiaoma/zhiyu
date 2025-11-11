@@ -8,6 +8,7 @@
     "vector": "node src/vector.js",
     "chroma-cloud": "node src/chroma-test.js",
     "chroma-local": "node src/chroma-local.js",
+    "rag-demo": "node src/rag-demo.js",
     "start-db": "docker run -d -p 8000:8000 --name chromadb chromadb/chroma:latest",
     "stop-db": "docker stop chromadb",
     "restart-db": "docker restart chromadb"
@@ -20,7 +21,8 @@
     "@chroma-core/default-embed": "^0.1.8",
     "@langchain/community": "^1.0.0",
     "@langchain/core": "^1.0.1",
-    "chromadb": "^3.1.1",
-    "langchain": "^1.0.1"
+    "@langchain/textsplitters": "^1.0.0",
+    "langchain": "^1.0.1",
+    "pdf-parse": "^1.1.1"
   }
 }
