@@ -19,8 +19,10 @@
   "description": "",
   "dependencies": {
     "@chroma-core/default-embed": "^0.1.8",
-    "@langchain/community": "^1.0.0",
-    "@langchain/core": "^1.0.1",
+    "@langchain/community": "^1.0.2",
+    "@langchain/core": "^1.0.4",
+    "@langchain/deepseek": "^1.0.0",
+    "@langchain/langgraph": "^1.0.1",
     "@langchain/textsplitters": "^1.0.0",
     "langchain": "^1.0.1",
     "pdf-parse": "^1.1.1"
