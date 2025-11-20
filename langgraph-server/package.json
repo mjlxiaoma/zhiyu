@@ -1,0 +1,30 @@
+{
+  "name": "langgraph-server",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "dev": "langgraphjs dev --config langgraph.json",
+    "start": "langgraphjs dev --config langgraph.json",
+    "graph:docker": "langgraphjs up --config langgraph.json",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@langchain/langgraph-cli": "^1.0.3",
+    "@types/node": "^24.10.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@langchain/deepseek": "^1.0.1",
+    "@langchain/langgraph": "^1.0.2",
+    "dotenv": "^17.2.3",
+    "langchain": "^1.0.6",
+    "zod": "^4.1.12"
+  }
+}
