@@ -1,22 +1,29 @@
 import "dotenv/config";
-import { MessagesAnnotation, StateGraph } from "@langchain/langgraph";
-import { ChatDeepSeek } from "@langchain/deepseek";
+import { MessagesAnnotation, StateGraph, END } from "@langchain/langgraph";
 
-type AgentState = typeof MessagesAnnotation.State;
+import { ConfigurationSchema } from "./config";
+import { callModel, type AgentState } from "./callModel";
+import { toolNode } from "./toolNode";
 
-const model = new ChatDeepSeek({
-  model: process.env.DEEPSEEK_MODEL ?? "deepseek-chat",
-  temperature: 0,
-});
+const routeModelOutput = (state: AgentState) => {
+  const lastMessage = state.messages[state.messages.length - 1];
+  if (
+    lastMessage &&
+    "tool_calls" in lastMessage &&
+    Array.isArray(lastMessage.tool_calls) &&
+    lastMessage.tool_calls.length > 0
+  ) {
+    return "tools";
+  }
 
-const replyWithLLM = async (state: AgentState): Promise<Partial<AgentState>> => {
-  const response = await model.invoke(state.messages);
-  return { messages: [response] };
+  return END;
 };
 
-const workflow = new StateGraph(MessagesAnnotation)
-  .addNode("agent", replyWithLLM)
-  .addEdge("__start__", "agent")
-  .addEdge("agent", "__end__");
+const workflow = new StateGraph(MessagesAnnotation, ConfigurationSchema)
+  .addNode("callModel", callModel)
+  .addNode("tools", toolNode)
+  .addEdge("__start__", "callModel")
+  .addConditionalEdges("callModel", routeModelOutput)
+  .addEdge("tools", "callModel");
 
 export const graph = workflow.compile();
