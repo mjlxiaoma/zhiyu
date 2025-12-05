@@ -1,54 +1,74 @@
 import { SystemMessage } from "@langchain/core/messages";
-import { MessagesAnnotation } from "@langchain/langgraph";
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { PDFParse } = require("pdf-parse");
+import { Annotation, MessagesAnnotation } from "@langchain/langgraph";
 
 import type { NodeRuntimeConfig } from "./config";
 import { resolveConfiguration } from "./config";
 import { createConfiguredModel } from "./model";
 import { SYSTEM_PROMPT } from "./prompt";
 
-export type AgentState = typeof MessagesAnnotation.State;
+export interface PdfContent {
+    filename: string;
+    text: string;
+}
+
+export const AgentStateAnnotation = Annotation.Root({
+    ...MessagesAnnotation.spec,
+    pdfContents: Annotation<PdfContent[]>({
+        default: () => [],
+        reducer: (_, y) => y,
+    }),
+});
+
+export type AgentState = typeof AgentStateAnnotation.State;
+
+// 过滤消息中不支持的 file 类型内容
+const sanitizeMessages = (messages: AgentState["messages"]) => {
+    return messages.map((message) => {
+        if (Array.isArray(message.content)) {
+            const filteredContent = message.content
+                .map((item: any) => {
+                    // 过滤掉 file 类型
+                    if (item?.type === "file") {
+                        return null;
+                    }
+                    return item;
+                })
+                .filter((item: any) => item !== null);
+
+            // 如果内容为空，返回一个空文本
+            if (filteredContent.length === 0) {
+                return {
+                    ...message,
+                    content: [{ type: "text", text: "[附件已处理]" }],
+                };
+            }
+
+            return {
+                ...message,
+                content: filteredContent,
+            };
+        }
+        return message;
+    });
+};
 
 export const callModel = async (
     state: AgentState,
     config?: NodeRuntimeConfig,
 ): Promise<Partial<AgentState>> => {
-    const lastMessage = state.messages[state.messages.length - 1];
-    if (lastMessage && Array.isArray(lastMessage.content)) {
-        const pdfContent = lastMessage.content.find(
-            (item: any) =>
-                item?.type === "file" && item?.mimeType === "application/pdf",
-        ) as any;
-
-        if (pdfContent) {
-            const base64Data = pdfContent.data;
-            const fileName = pdfContent.metadata?.filename ?? "";
-
-            const buffer = Buffer.from(base64Data, "base64");
-            try {
-                const instance = new PDFParse(new Uint8Array(buffer));
-                const text = await instance.getText();
-                console.log(`File: ${fileName}`);
-                console.log("PDF Text Content:");
-                console.log(text);
-            } catch (error) {
-                console.error("Error parsing PDF:", error);
-            }
-
-            return {};
-        }
-    }
-
     const graphConfig = resolveConfiguration(config);
     const model = createConfiguredModel(graphConfig);
 
     const hasSystemMessage = state.messages.some(
         (message) => message.getType?.() === "system",
     );
+
+    // 过滤掉不支持的 file 类型
+    const sanitizedMessages = sanitizeMessages(state.messages);
+
     const promptMessages = hasSystemMessage
-        ? state.messages
-        : [new SystemMessage(SYSTEM_PROMPT), ...state.messages];
+        ? sanitizedMessages
+        : [new SystemMessage(SYSTEM_PROMPT), ...sanitizedMessages];
 
     const response = await model.invoke(promptMessages);
     return { messages: [response] };

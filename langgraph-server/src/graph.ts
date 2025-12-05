@@ -1,8 +1,9 @@
 import "dotenv/config";
-import { MessagesAnnotation, StateGraph, END } from "@langchain/langgraph";
+import { StateGraph, END } from "@langchain/langgraph";
 
 import { ConfigurationSchema } from "./config";
-import { callModel, type AgentState } from "./callModel";
+import { callModel, AgentStateAnnotation, type AgentState } from "./callModel";
+import { processPDF } from "./processPDF";
 import { toolNode } from "./toolNode";
 
 const routeModelOutput = (state: AgentState) => {
@@ -19,10 +20,12 @@ const routeModelOutput = (state: AgentState) => {
   return END;
 };
 
-const workflow = new StateGraph(MessagesAnnotation, ConfigurationSchema)
+const workflow = new StateGraph(AgentStateAnnotation, ConfigurationSchema)
+  .addNode("processPDF", processPDF)
   .addNode("callModel", callModel)
   .addNode("tools", toolNode)
-  .addEdge("__start__", "callModel")
+  .addEdge("__start__", "processPDF")
+  .addEdge("processPDF", "callModel")
   .addConditionalEdges("callModel", routeModelOutput)
   .addEdge("tools", "callModel");
 
